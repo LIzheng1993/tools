@@ -1,0 +1,5 @@
+nginx 配合做反向代理
+查看 localhost.conf
+
+服务器端执行 修改相应IP和端口 nginx也要修改反向代理的IP和端口 前端也要修改
+nohup php -f websocket.php >/dev/null 2>&1 &

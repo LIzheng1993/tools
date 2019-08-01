@@ -1,0 +1,86 @@
+##### 1、 安装并部署vue(未打包)
+- 下载需要的node版本， 去官网（http://nodejs.cn/download/）或者淘宝镜像（https://npm.taobao.org/mirrors/node/）找到需要的版本，下载
+- 上传node压缩包到服务器任意位置
+- `tar -zxvf  /usr/local/src/node-v8.10.0-linux-x64.tar.gz`解压 
+( 一般我会解压到`/usr/local/src`下)  解压完node就算安装完了
+- 名字太长，改名 `mv node-v8.10.0-linux-x64 nodejs`  
+但是此时 `node --version` 提示没有node命令，说明node并不是全局命令，我们需要为它建立软连接
+- `cd /usr/local/src/nodejs/bin` 进入node的bin目录
+发现有 node npm npx 三个文件，说明前面无误
+- 建立软连接  
+`ln -s /usr/local/src/nodejs/bin/npm /usr/local/bin/`  
+`ln -s /usr/local/src/nodejs/bin/node /usr/local/bin/`  
+此时执行`node --version` 和 `npm -V` 可以看到版本信息了.
+- 安装脚手架vue-cli，将来webpack使用  
+`npm install -g vue-cli`  
+安装之后需要建立软连接，不然提示没有vue命令  
+`ln -s /usr/local/src/nodejs/bin/vue /usr/local/bin/vue`
+- 此时我们把我们项目的代码放到/www目录下，通过Nginx负载均衡指向指定端口，然后我们的vue项目监听该端口  
+   - 修改config/index.js的监听地址127.0.0.1 和端口8081
+   - 然后配置nginx  nginx配置如下，直接粘进去贴到最后
+`upstream app_nodejs {
+            #访问的实际地址是下面的，可以有多个，多个时就达到了负载均衡的作用，后面其实还有一个参数，但是此处写不写无区别。
+            server 127.0.0.1:8081;
+            keepalive 64;
+        }
+        server {
+            #监听的是80端口，不建议换成其他端口，因为换成其他端口后，你访问时，域名也得加上加上端口，比如端口号改成8080，访问时则是：onloading.cn:8080
+            listen  80;
+             #访问的域名
+            server_name facility.klagri.com.cn;
+             #如果访问的是ip，则直接返回404，此处只允许通过域名访问
+            if ($host ~ "\d+\.\d+\.\d+\.\d") {
+                    return 404;
+                }
+            location / {
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Nginx-Proxy true;
+                proxy_set_header Connection "";
+                #指定使用哪个负载均衡，其他location的值均属于默认值
+                proxy_pass http://app_nodejs;
+                proxy_redirect off;
+            }
+
+        }
+`
+- 这些都完成后，进入项目目录，执行`npm install`
+- 执行`npm run dev` 就可以通过`facility.klagri.com.cn`访问了 记得重启服务器 
+因为没有打包，可能会遇到Invalid Host header 错误，需要在`webpack.base.conf.js`中添加  
+`devServer: {
+    disableHostCheck: true
+  }`  
+放到`module.exports = {}`中
+
+##### 那么如何打包呢。
+- 很简单，直接`npm run build`
+- 生成dist文件夹后，直接放到服务器上去，nginx配置域名指向dist文件夹就可以了。 记得重启服务器  
+下面是三个博客， 讲的vue部署，很不错  
+https://blog.csdn.net/liang377122210/article/details/78562660  
+http://www.cnblogs.com/xueweijie/p/6971146.html  
+https://www.cnblogs.com/hai-cheng/p/7826701.html
+
+###  其他
+##### 跨域  
+header('Access-Control-Allow-Origin: *');
+header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+header('Access-Control-Allow-Methods: GET, POST, PUT,DELETE');
+
+##### 通信
+- vue 父子组件通信的时候，数据都要写到组件的标签里
+
+##### 声明周期
+    加载渲染  
+        父beforeCreate->父created->父beforeMount->子beforeCreate->子created->子beforeMount->子mounted->父mounted
+    子组件更新过程  
+        父beforeUpdate->子beforeUpdate->子updated->父updated
+    父组件更新过程  
+        父beforeUpdate->父updated  
+    销毁过程  
+        父beforeDestroy->子beforeDestroy->子destroyed->父destroyed
+##### 谷歌地图
+<!--引入google地图-->
+    <script src="http://ditu.google.cn/maps/api/js?key=AIzaSyDJW4jsPlNKgv6jFm3B5Edp5ywgdqLWdmc&sensor=false">
+    </script>  
+    使用详情见 菜鸟教程

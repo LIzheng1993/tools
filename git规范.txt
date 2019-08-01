@@ -1,0 +1,35 @@
+开发完毕之后工作
+
+1.从开发分支切换到dev分支
+
+2.请大家执行， git remote prune origin 并且删除掉本地开发分支
+
+其他:
+
+删除远程分支 git push --delete origin dev_20190110
+
+改变git 地址 git remote set-url origin git@1111.111.111
+
+删除本地分支 git branch -D
+
+创建本地分支之后并且创建远程的分支且建立追踪
+git checkout -b aaa
+git push -u origin aaa
+
+查看本地分支和追踪
+git branch -vv 
+
+查看地址
+git remote -v
+
+查看本地和远程所有分支
+git branch -al
+
+新建本地分支 并且追踪到远程已有的分支
+git checkout master
+git branch -u origin/master master
+
+
+
+git log /dir/aaa.php
+git show 
