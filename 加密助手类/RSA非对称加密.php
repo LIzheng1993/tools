@@ -14,44 +14,64 @@ oiq+Y8SgCCs73qixrU1YpJy9yKA/meG9smsl4Oh9IOIGI+zUygh9YdSmEq0CQQC2
 4G3IP2G3lNDRdZIm5NZ7PfnmyRabxk/UgVUWdk47IwTZHFkdhxKfC8QepUhBsAHL  
 QjifGXY4eJKUBm3FpDGJAkAFwUxYssiJjvrHwnHFbg0rFkvvY63OSmnRxiL4X6EY  
 yI9lblCsyfpl25l7l5zmJrAHn45zAiOoBrWqpM5edu7c  
------END RSA PRIVATE KEY-----';  
-  
+-----END RSA PRIVATE KEY-----';
+
 //公匙
 $public_key = '-----BEGIN PUBLIC KEY-----  
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3//sR2tXw0wrC2DySx8vNGlqt  
 3Y7ldU9+LBLI6e1KS5lfc5jlTGF7KBTSkCHBM3ouEHWqp1ZJ85iJe59aF5gIB2kl  
 Bd6h4wrbbHA2XE1sq21ykja/Gqx7/IRia3zQfxGv/qEkyGOx+XALVoOlZqDwh76o  
 2n1vP1D+tD3amHsK7QIDAQAB  
------END PUBLIC KEY-----';  
+-----END PUBLIC KEY-----';
 
-$pi_key =  openssl_pkey_get_private($private_key);//这个函数可用来判断私钥是否是可用的，可用返回资源id Resource id  
-$pu_key = openssl_pkey_get_public($public_key);//这个函数可用来判断公钥是否是可用的  
-print_r($pi_key);echo "\n";  
-print_r($pu_key);echo "\n";  
+// 这个函数可用来判断私钥是否是可用的，可用返回资源id Resource id
+$pi_key =  openssl_pkey_get_private($private_key);
 
-$data = "aassssasssddd";//原始数据  
-$encrypted = "";   
-$decrypted = "";   
-echo "source data:",$data,"\n";  
-  
-echo "private key encrypt:\n";  
+// 这个函数可用来判断公钥是否是可用的，可用返回资源id Resource id
+$pu_key = openssl_pkey_get_public($public_key);
 
-openssl_private_encrypt($data,$encrypted,$pi_key);//私钥加密  
-$encrypted = base64_encode($encrypted);//加密后的内容通常含有特殊字符，需要编码转换下，在网络间通过url传输时要注意base64编码是否是url安全的  
-echo $encrypted,"\n";  
-echo "public key decrypt:\n";  
-  
-openssl_public_decrypt(base64_decode($encrypted),$decrypted,$pu_key);//私钥加密的内容通过公钥可用解密出来  
-echo $decrypted,"\n";   
+echo "私钥";print_r($pi_key);echo "\n\n";
+echo "公钥";print_r($pu_key);echo "\n\n";
 
-echo "---------------------------------------\n";  
-echo "public key encrypt:\n";  
-  
-openssl_public_encrypt($data,$encrypted,$pu_key);//公钥加密  
-$encrypted = base64_encode($encrypted);  
-echo $encrypted,"\n";  
-  
-echo "private key decrypt:\n";  
-openssl_private_decrypt(base64_decode($encrypted),$decrypted,$pi_key);//私钥解密  
-echo $decrypted,"\n";  
- 
+// 原始数据
+$data = "账号:admin，密码:123456";
+
+// 加密以后的数据，用于在网络上传输
+$encrypted = "";
+
+// 解密后的数据
+$decrypted = "";
+
+echo "原始数据为:".$data."\n\n";
+echo "通过私钥加密: \n\n";
+//私钥加密
+if(openssl_private_encrypt($data,$encrypted,$pi_key))
+{
+
+    $encrypted = base64_encode($encrypted);//加密后的内容通常含有特殊字符，需要编码转换下，否则乱码，在网络间通过url传输时要注意base64编码是否是url安全的
+    echo "加密成功，加密后数据为:".$encrypted."\n\n";
+}else
+{
+    die('加密失败');
+}
+
+echo "通过公钥解密:\n\n";
+//私钥加密的内容通过公钥可用解密出来
+if(openssl_public_decrypt(base64_decode($encrypted),$decrypted,$pu_key))
+{
+    echo "解密成功，解密后数据为:".$decrypted."\n\n";
+}else
+{
+    die('解密失败');
+}
+
+
+echo "---------------------------------------\n\n";
+echo "公钥加密:\n\n";
+openssl_public_encrypt($data,$encrypted,$pu_key);//公钥加密
+$encrypted = base64_encode($encrypted);
+echo "公钥加密后数据：".$encrypted."\n\n";
+
+echo "私钥解密：\n\n";
+openssl_private_decrypt(base64_decode($encrypted),$decrypted,$pi_key);//私钥解密
+echo "私钥解密后数据：".$decrypted."\n\n";
